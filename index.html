@@ -4,1073 +4,925 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Himalayan Diaries: An Interactive Journey</title>
+    <title>Himalayan Diaries: The Complete Journey</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap');
         body {
             font-family: 'Inter', sans-serif;
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 400px;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
+        h1, h2, h3, h4, .serif-text {
+            font-family: 'Merriweather', serif;
         }
         .tab-active {
             border-bottom-color: #059669; 
             color: #059669;
             font-weight: 600;
         }
-        .map-dot {
+        /* Custom scrollbar for the tab container */
+        .tab-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        .tab-container::-webkit-scrollbar-thumb {
+            background-color: #d6d3d1;
+            border-radius: 4px;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        /* Image Edit Overlay */
+        .editable-image-container {
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
             transition: all 0.3s ease;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .map-dot:hover {
-            transform: scale(1.1);
-            background-color: #059669; 
-        }
-        .map-line {
-            flex-grow: 1;
-            width: 4px; /* Changed to width for vertical lines */
-            background-color: #d1d5db;
-        }
-        .interactive-card {
-            cursor: pointer;
-            transition: box-shadow 0.3s ease;
-        }
-        .interactive-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        /* Style for responsive video iframe */
-        .aspect-video {
-            aspect-ratio: 16 / 9;
-        }
-        /* Styles for the plaque cards */
-        .plaque-card {
-            background-color: #f5f5f4; /* stone-100 */
-            border: 1px solid #d6d3d1; /* stone-300 */
-            border-radius: 0.5rem;
-            padding: 1rem;
+        .editable-image-container:hover::after {
+            content: '📷 Click to Replace';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
+            background: rgba(0,0,0,0.4);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            backdrop-filter: blur(2px);
+            z-index: 10;
         }
-        .plaque-card h5 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1c1917; /* stone-900 */
-            border-bottom: 2px solid #a8a29e; /* stone-400 */
-            padding-bottom: 0.5rem;
-            margin-bottom: 0.75rem;
+        
+        /* Gallery Grid Styles */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(2, 200px);
+            gap: 12px;
         }
-        .plaque-card p, .plaque-card li {
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: scale(1.02);
+            z-index: 10;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+        /* Layout Logic: 1 Main + 4 Small */
+        .gallery-main {
+            grid-column: span 8;
+            grid-row: span 2;
+        }
+        .gallery-sub {
+            grid-column: span 4;
+            grid-row: span 1;
+        }
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: auto;
+            }
+            .gallery-main {
+                grid-column: span 2;
+                height: 250px;
+            }
+            .gallery-sub {
+                grid-column: span 1;
+                height: 150px;
+            }
+        }
+
+        /* Chat Widget Styles */
+        #chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        #chat-window {
+            width: 350px;
+            height: 450px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 1px solid #e5e7eb;
+        }
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #f9fafb;
+        }
+        .message {
+            margin-bottom: 10px;
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .message.user {
+            background-color: #059669;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+            flex-direction: row-reverse;
+        }
+        .message.bot {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .typing-indicator {
+            font-style: italic;
+            color: #6b7280;
             font-size: 0.8rem;
-            color: #44403c; /* stone-700 */
-            line-height: 1.5;
+            margin-left: 10px;
+            display: none;
         }
-        .nepali-text {
-            font-size: 1rem;
-            line-height: 1.8;
-            color: #44403c;
+        /* Animated Yak Styling */
+        .yak-anim {
+            animation: blink 4s infinite;
+        }
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+        .yak-ear {
+            transform-origin: center;
+            animation: twitch 3s infinite ease-in-out;
+        }
+        @keyframes twitch {
+            0%, 100% { transform: rotate(0deg); }
+            90% { transform: rotate(5deg); }
+            95% { transform: rotate(-5deg); }
         }
     </style>
 </head>
-<body class="bg-stone-100 text-stone-900">
+<body class="bg-stone-50 text-stone-900">
 
-    <header class="bg-white shadow-md">
-        <div class="container mx-auto px-4 py-6">
-            <h1 class="text-3xl font-bold text-center text-emerald-800">Himalayan Diaries: An Interactive Journey</h1>
-            <p class="text-center text-stone-600 mt-1">Part 1: The Ramechhap Shuffle, The Flight of a Lifetime, & The Namche Climb</p>
+    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-stone-200">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-emerald-900 tracking-tight">Himalayan Diaries</h1>
+                <p class="text-xs text-stone-500 uppercase tracking-widest">Expedition Log • Oct 2025</p>
+            </div>
+            <div class="hidden md:block text-right">
+                <div class="text-sm font-bold text-stone-800">EBC Expedition</div>
+                <div class="text-xs text-stone-500">Kathmandu → Everest Base Camp</div>
+            </div>
         </div>
     </header>
 
-    <main class="container mx-auto p-4 md:p-8">
+    <main class="container mx-auto p-4 md:p-8 max-w-7xl">
 
         <!-- EBC Introduction -->
-        <section class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-2xl font-bold text-emerald-800 mb-3">The Lure of the Giants: Why Everest Base Camp?</h2>
-            <p class="text-stone-700 leading-relaxed mb-4">
-                The draw of Mount Everest, *Sagarmatha* to the Nepalis and *Chomolungma* to the Sherpa people, is timeless. For many, including myself, the longing to stand in the shadow of the highest mountain on Earth is a primal call—a chance to feel both utterly insignificant and profoundly alive.
-            </p>
-            <p class="text-stone-700 leading-relaxed mb-4">
-                This trail isn't just a physical challenge; it's a journey through history. We walk in the footsteps of **Sir Edmund Hillary** and **Tenzing Norgay**, the pioneers who first summited in 1953, turning the impossible into reality. Their legacy paved the way for modern legends—from record-breaking Sherpa climbers like **Kami Rita Sherpa** to the thousands of trekkers who seek inspiration in the Khumbu valley every year.
-            </p>
-            <p class="text-stone-700 leading-relaxed">
-                The EBC trek is an immersion into Sherpa culture, a landscape of ancient monasteries, flapping prayer flags (*lung ta*), and breathtaking views that redefine the concept of "majestic." It’s an adventure that tests the body, calms the mind, and guarantees memories that last a lifetime.
-            </p>
-        </section>
+        <section class="bg-white rounded-xl shadow-sm p-8 mb-12 border border-stone-200">
+            
+            <!-- Illustrated Map Placeholder -->
+            <div class="w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden shadow-inner border border-stone-200 editable-image-container group relative bg-stone-100">
+                 <img src="Gemini_Generated_Image_9uvsj89uvsj89uvs.png" alt="Illustrated Map of Everest Base Camp Trek" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-700">
+                 <div class="absolute bottom-0 left-0 bg-black/50 text-white text-xs p-2 rounded-tr">Illustrated Route Map</div>
+            </div>
 
-        <section class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-2xl font-semibold text-emerald-700 mb-3">Journey Overview: The Complete 13-Day Itinerary</h2>
-            <p class="text-stone-700 mb-6">
-                Explore the entire journey below. Click any stage to see the altitude, distance, and duration. Notice the dramatic altitude gain from Lukla (2800 m) to Kalapatthar (5550 m).
-            </p>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-xl font-semibold mb-4 text-center">Trek Stages & Altitudes</h3>
-                    <div class="p-4 rounded-lg border border-stone-200 overflow-y-auto max-h-[600px] bg-stone-50">
-                        <div class="flex flex-col items-center w-full">
-                            <!-- Stage 1: Kathmandu (Day 0) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapKtm" class="map-dot bg-amber-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">KTM</div>
-                                    <span class="text-sm font-medium block mt-1">Kathmandu (1400m / 4,600ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div> 
-                            <!-- Stage 2: Ramechhap (Day 1) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapRmc" class="map-dot bg-amber-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">RMC</div>
-                                    <span class="text-sm font-medium block mt-1">Ramechhap (474m / 1,555ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 3: Lukla (Day 2 Start) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapLukla" class="map-dot bg-emerald-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">LUK</div>
-                                    <span class="text-sm font-medium block mt-1">Lukla (2800m / 9,200ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 4: Phakding (Day 2 End) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapPhk" class="map-dot bg-emerald-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">PHK</div>
-                                    <span class="text-sm font-medium block mt-1">Phakding (2610m / 8,560ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 5: Namche Bazaar (Day 3 & 4) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapNamche" class="map-dot bg-emerald-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">NAM</div>
-                                    <span class="text-sm font-medium block mt-1">Namche Bazaar (3440m / 11,286ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 6: Tengboche (Day 5) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapTengboche" class="map-dot bg-emerald-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">TEB</div>
-                                    <span class="text-sm font-medium block mt-1">Tengboche (3867m / 12,687ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 7: Dingboche (Day 6 & 7) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapDingboche" class="map-dot bg-emerald-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">DIB</div>
-                                    <span class="text-sm font-medium block mt-1">Dingboche (4410m / 14,470ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 8: Lobuche (Day 8) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapLobuche" class="map-dot bg-emerald-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">LOB</div>
-                                    <span class="text-sm font-medium block mt-1">Lobuche (4940m / 16,207ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 9: Gorakshep (Day 9) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapGorakshep" class="map-dot bg-emerald-700 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">GOR</div>
-                                    <span class="text-sm font-medium block mt-1">Gorakshep (5164m / 16,942ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 10: EBC Excursion (Day 9) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapEBC" class="map-dot bg-emerald-700 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">EBC</div>
-                                    <span class="text-sm font-medium block mt-1">Base Camp (5364m / 17,600ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 11: Kalapatthar (Day 10) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapKalapatthar" class="map-dot bg-emerald-800 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">KLT</div>
-                                    <span class="text-sm font-medium block mt-1">Kalapatthar (5550m / 18,209ft)</span>
-                                </div>
-                            </div>
-                            <div class="map-line h-6"></div>
-                            <!-- Stage 12: Descent Pangboche (Day 10 End) -->
-                            <div class="flex items-center w-full">
-                                <div class="flex-1 text-center">
-                                    <div id="mapPangboche" class="map-dot bg-amber-600 w-10 h-10 rounded-full mx-auto flex items-center justify-center text-white font-bold text-sm shadow">PGB</div>
-                                    <span class="text-sm font-medium block mt-1">Pangboche (3985m / 13,074ft)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                        
-                    <!-- Map Details for interactive counters -->
-                    <div id="mapDetails" class="mt-4 p-4 bg-white rounded-lg shadow text-stone-700 min-h-32 flex flex-col justify-center">
-                        <h4 id="detailTitle" class="text-xl font-bold text-center text-emerald-800 mb-2">Select a Stage</h4>
-                        <div id="detailStats" class="grid grid-cols-3 gap-2 text-center border-t pt-2 border-stone-300 hidden">
-                            <!-- Stats will be injected here -->
-                        </div>
-                        <p id="detailDescription" class="text-sm text-center italic mt-2">Click a location dot above (KTM, LUK, NAM, EBC, etc.) to view the stats for that stage of the journey.</p>
-                    </div>
-
+            <div class="flex flex-col md:flex-row gap-8 items-start">
+                <div class="flex-1 space-y-4">
+                    <h2 class="text-3xl font-bold text-emerald-900">The Path to the Roof of the World</h2>
+                    <p class="text-stone-700 leading-loose text-lg serif-text">
+                        This is not just a trail; it is a vertical pilgrimage into the sanctuary of the gods. The journey to the base of Sagarmatha traces the spine of the Khumbu Valley, a rugged corridor of stone and spirit spanning <strong>130 kilometers</strong>. It begins in the sensory riot of Kathmandu, ascends through emerald pine forests echoing with yak bells, traverses high-altitude lunar deserts where the wind bites like ice, and culminates at the foot of the Khumbu Icefall—a frozen river of chaos. Every step is a negotiation with the thin air, a rhythmic meditation performed against the backdrop of the planet's most colossal geological cathedrals. It is a passage through the sublime, where the scale of the earth silences the mind.
+                    </p>
+                    <p class="text-stone-600 italic border-l-4 border-amber-500 pl-4 py-2">
+                        "We don't conquer mountains, we conquer ourselves." — Sir Edmund Hillary
+                    </p>
                 </div>
-                <div>
-                    <h3 class="text-xl font-semibold mb-4 text-center">Altitude Profile (The Ascent)</h3>
-                    <div class="chart-container">
-                        <canvas id="altitudeChart"></canvas>
-                    </div>
+                <div class="w-full md:w-1/3 bg-stone-100 p-6 rounded-lg border border-stone-200">
+                    <h4 class="font-bold text-stone-800 mb-4 uppercase tracking-wider text-sm border-b border-stone-300 pb-2">Expedition Vitals</h4>
+                    <ul class="space-y-3 text-sm text-stone-700">
+                        <li class="flex justify-between"><span>Max Elevation</span> <span class="font-bold text-emerald-700">5,550m (Kala Patthar)</span></li>
+                        <li class="flex justify-between"><span>Base Camp Elev</span> <span class="font-bold">5,364m</span></li>
+                        <li class="flex justify-between"><span>O₂ at Base Camp</span> <span class="font-bold text-red-600">~53% sea level</span></li>
+                        <li class="flex justify-between"><span>Start Point</span> <span class="font-bold">Lukla (2,845m)</span></li>
+                        <li class="flex justify-between"><span>Avg Temp (Night)</span> <span class="font-bold text-blue-600">-15°C to -5°C</span></li>
+                    </ul>
                 </div>
             </div>
         </section>
 
+        <!-- MERGED VISUAL SECTION (MAP ONLY) -->
+        <section class="bg-stone-900 rounded-2xl shadow-2xl overflow-hidden mb-12 text-stone-100 editable-image-container group relative">
+             <img src="Gemini_Generated_Image_9uvsj89uvsj89uvs.png" class="w-full h-auto object-cover transform group-hover:scale-105 transition duration-700" alt="Illustrated Map of the Everest Base Camp Trek">
+        </section>
+
+        <!-- DAILY LOG SECTION -->
         <section>
-            <h2 class="text-2xl font-semibold text-emerald-700 mb-4">Day-by-Day Log</h2>
-            <p class="text-stone-700 mb-6">
-                While the overview gives you the "what," the daily logs explore the "how" and "why"—from the frustration of being grounded to the thrill of the first trek. Use the tabs below to switch between Day 1, Day 2, and Day 3 to see how the journey unfolded.
-            </p>
-
-            <div class="flex border-b-2 border-stone-300 mb-6 overflow-x-auto">
-                <button id="btnDay1" class="text-lg text-stone-500 py-2 px-6 border-b-4 border-transparent flex-shrink-0">Day 1: The Wait</button>
-                <button id="btnDay2" class="text-lg text-stone-500 py-2 px-6 border-b-4 border-transparent flex-shrink-0">Day 2: The Flight</button>
-                <button id="btnDay3" class="text-lg text-stone-500 py-2 px-6 border-b-4 border-transparent flex-shrink-0">Day 3: The Ascent</button> 
-                <button id="btnDay4" class="text-lg text-stone-500 py-2 px-6 border-b-4 border-transparent flex-shrink-0">Day 4: Acclimatize</button> 
-                <button id="btnDay5" class="text-lg text-stone-500 py-2 px-6 border-b-4 border-transparent flex-shrink-0">Day 5: Tengboche</button> 
+            <div class="flex items-center gap-4 mb-6">
+                <h2 class="text-3xl font-bold text-emerald-900">The Daily Log</h2>
+                <span class="h-px bg-stone-300 flex-grow"></span>
             </div>
 
-            <!-- DAY 1 CONTENT -->
-            <div id="day1Content" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow space-y-4">
-                        <h3 class="text-2xl font-bold text-emerald-800 mb-3">Day 1: The Long, Perilous Road to Ramechhap</h3>
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                            The trek to Everest Base Camp officially begins not with a flight, but with an exhausting, pre-dawn **overland expedition**. To ease congestion at Kathmandu’s international airport, all Lukla flights now depart from the remote **Manthali Airport** in Ramechhap. This necessitated abandoning the promise of a swift 40-minute plane ride for a grueling **130-kilometer, 5-hour jeep ride**. This journey alone was a raw, bone-rattling introduction to the volatility of the Nepali landscape.
-                        </p>
-                        
-                        <h4 class="text-xl font-semibold text-amber-700 border-b border-stone-200 pb-2 mb-3">The Road: A Symphony of Dust, Drops, and Landslides</h4>
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                            Our 4x4 jeep quickly left the smooth city roads behind, plunging into a dusty, dizzying ballet. We snaked along roads carved precariously into the steep hillsides, navigating stretches that were less paved route and more obstacle course. The legacy of the recent monsoon was everywhere: vast portions of the road were reduced to deep, muddy ruts, and we had to crawl past recent **landslides** where tons of earth and rock had crumbled away, narrowing the path to a terrifying, single-lane edge hundreds of feet above the valley floor.
-                        </p>
+            <div class="tab-container flex mb-8 overflow-x-auto whitespace-nowrap pb-2 gap-2 sticky top-[80px] bg-stone-50 z-40 py-2">
+                <button id="btnDay1" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 1: Ramechhap</button>
+                <button id="btnDay2" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 2: Lukla</button>
+                <button id="btnDay3" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 3: Namche</button> 
+                <button id="btnDay4" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 4: Acclimatize</button> 
+                <button id="btnDay5" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 5: Tengboche</button> 
+                <button id="btnDay6" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 6: Dingboche</button>
+                <button id="btnDay7" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 7: Nagarjun</button>
+                <button id="btnDay8" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 8: Lobuche</button>
+                <button id="btnDay9" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 9: Gorakshep</button>
+                <button id="btnDay10" class="text-sm font-medium text-stone-500 py-2 px-5 rounded-full hover:bg-stone-200 hover:text-emerald-800 transition-all border border-transparent">Day 10: EBC</button>
+            </div>
 
-                        <!-- Day 1 Image 1: Jeep Ride -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x400/38bdf8/ffffff?text=Perilous+Road+to+Ramechhap" alt="Winding, dangerous road from Kathmandu to Ramechhap" class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Caption 1: The 5-hour drive was a test of endurance, featuring deep ruts, sharp drops, and constant near-misses with local buses.
-                            </p>
-                        </div>
-                        
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                             For hours, the **Tamakoshi River** was our furious companion. Swollen by mountain meltwater, it roared in a violent, muddy brown torrent right alongside the road, its noise a constant reminder of the raw, untamed power of the geology we were traversing. Through breaks in the morning mist, we were rewarded with our first breathtaking views of the high Himalayas, specifically the snow-capped, magnificent peaks of the **Gauri Shankar Range**—distant, blindingly white fortresses that promised the world we were heading into.
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-amber-700 border-b border-stone-200 pb-2 mb-3">Manthali Airport: The Epicenter of Anxiety</h4>
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                             The small, humble **Manthali (Ramechhap) Airport (RHP)** sits in a dusty, sun-baked valley at a low altitude of **474 meters (1,555 ft)**. Yet, it is the crucial artery for the entire Khumbu region. Airlines like **Tara Air** and **Summit Air** operate here, using rugged DHC-6 Twin Otter planes perfectly suited for the challenging Tenzing-Hillary Airport runway.
-                        </p>
-
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                             The waiting area was a crowded, chaotic shed, packed wall-to-wall with trekkers—a human tapestry of anticipation. The energy was palpable: a shared, fragile hope that the weather gods were smiling. Every face, representing months of planning and investment, was turned upward, tracking the smallest meteorological shift. This desperate, crowded space became the psychological crucible of the journey.
-                        </p>
-
-                        <!-- Day 1 Image 2: Grounded -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x350/ef4444/ffffff?text=Flights+Suspended+-+Manthali+Airstrip" alt="Manthali airstrip with no planes taking off" class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Caption 2: The "we're-grounded" moment. That single, unassuming strip of asphalt behind us was our gateway to the Khumbu, firmly closed by the unpredictable Himalayan *mausam* (weather).
-                            </p>
-                        </div>
-
-                        <p class="text-stone-700 leading-relaxed">
-                            Then came the dreaded announcement: **"All flights suspended."** Wind. Clouds. Lukla was closed. The sudden deflation of energy was dramatic—a collective sigh of disappointment that resonated throughout the hall. Our carefully planned itinerary was already shattered by the one factor no one can control. We were grounded, facing a minimum 24-hour delay, left to stew in the low-altitude anxiety of a small, remote guesthouse, knowing the clock was ticking against our ability to complete the trek on time.
-                        </p>
+            <!-- Content Container -->
+            <div id="contentContainer" class="min-h-[600px] mb-12">
+                
+                <!-- DAY 1 CONTENT -->
+                <div id="day1Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                         <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 1: The Great Diversion to Ramechhap</h3>
+                         <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                            <span>📍 Ramechhap (474m)</span> | <span>🌡️ 28°C (Hot/Dusty)</span> | <span>🚗 Drive: 5 Hours</span>
+                         </div>
+                         <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                             Modern trekking in Nepal begins with a logistical hurdle. Since 2019, most flights to Lukla have been diverted from Kathmandu to <strong>Manthali Airport in Ramechhap</strong> due to air traffic congestion. We woke at 2:00 AM for a grueling 5-hour drive through winding mid-hill highways. The landscape shifted from the urban sprawl of Kathmandu to terraced millet fields and the roaring Tama Koshi river. Upon arrival, the reality of Himalayan travel set in: "Flights delayed due to wind." We spent the day in the sweltering heat of the valley, bonding with fellow trekkers over tea and anxiety, waiting for a window that never opened.
+                         </p>
                     </div>
-                    
-                    <div class="space-y-6">
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold border-b border-stone-200 pb-2 mb-3">Key Stats</h4>
-                            <ul class="space-y-2 text-stone-700">
-                                <li><strong>Drive:</strong> 5-6 Hours</li>
-                                <li><strong>Distance:</strong> 130 km</li>
-                                <li><strong>Status:</strong> <span class="font-bold text-red-600">Grounded - Lukla Closed</span></li>
-                            </ul>
+                    <!-- 5 Image Gallery -->
+                    <div class="gallery-grid">
+                        <div class="gallery-item gallery-main editable-image-container">
+                            <img src="https://placehold.co/800x600/stone/white?text=Waiting+at+Manthali" alt="Manthali Airport Waiting Area">
                         </div>
-                        <div id="emotionCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-amber-700">Emotion Log: Anxiety </h4>
-                            <p class="text-sm text-stone-500 mb-2">Click to read more</p>
-                            <p id="emotionText" class="text-stone-700 hidden">
-                                The disappointment was a physical weight. A day of brutal travel, all for nothing. The anxiety wasn't about missing the summit; it was about losing precious time in the high-altitude acclimatization schedule. We had been reminded that in the Himalayas, the mountains always set the schedule.
-                            </p>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                            <img src="https://placehold.co/400x300/amber/white?text=The+Drive" alt="The winding road">
                         </div>
-                        <div id="airlineCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-emerald-700">Lukla Air Carriers</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click to see the airlines</p>
-                            <div id="airlineText" class="hidden">
-                                <p class="text-stone-700 font-semibold">Primary Ramechhap-Lukla Operators:</p>
-                                <ul class="list-disc pl-5 text-sm text-stone-700 mt-1 space-y-1">
-                                    <li>**Tara Air** (Part of Yeti Airlines Group)</li>
-                                    <li>**Summit Air** (Formerly Goma Air)</li>
-                                </ul>
-                                <p class="text-stone-700 mt-2">
-                                    Both use the reliable, high-wing **DHC-6 Twin Otter** aircraft, designed for short, challenging, and high-altitude runways like Lukla.
-                                </p>
-                            </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                            <img src="https://placehold.co/400x300/stone/white?text=Tama+Koshi+River" alt="River View">
+                        </div>
+                         <div class="gallery-item gallery-sub editable-image-container">
+                            <img src="https://placehold.co/400x300/stone/white?text=Dusty+Streets" alt="Ramechhap Street">
+                        </div>
+                         <div class="gallery-item gallery-sub editable-image-container">
+                            <img src="https://placehold.co/400x300/stone/white?text=Guesthouse" alt="Simple Lodge">
                         </div>
                     </div>
                 </div>
-            </div>
 
-
-            <!-- DAY 2 CONTENT -->
-            <div id="day2Content" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow space-y-4">
-                        <h3 class="text-2xl font-semibold mb-3">Day 2: The White-Knuckle Flight and Our First Steps in the Himalayas</h3>
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                            After yesterday's frustrating delay, the **Summit Air** flight from Ramechhap to Lukla felt electric! We boarded the small, sturdy plane for the short, exhilarating hop right into the heart of the Khumbu. It's a journey where you don't fly *over* the mountains—you fly *among* them.
+                <!-- DAY 2 CONTENT: LUKLA -->
+                <div id="day2Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 2: The World's Most Dangerous Airport</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Lukla (2,845m) → Phakding (2,610m)</span> | <span>👣 Dist: 6.2km</span> | <span>📉 Descent: 200m</span>
+                        </div>
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            The Twin Otter roared down the tarmac and lifted us over the ridges. The approach to <strong>Tenzing-Hillary Airport</strong> is terrifyingly beautiful; the runway is only 527 meters long with a steep 11.7% gradient to slow landing planes. Stepping off the plane, the cool alpine air hit us instantly. We walked through the Pasang Lhamu Gate, marking our official entry into the Khumbu. The town of Lukla was buzzing with porters and yaks. We paid respects at the new golden statues of Hillary and Tenzing before beginning the gentle descent towards Phakding, passing massive mani stones carved with the mantra <em>Om Mani Padme Hum</em>.
                         </p>
-
-                        <!-- Day 2 Video 1: Plane Taxiing -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200 my-4">
-                            <iframe class="w-full aspect-video" 
-                                src="" 
-                                title="Lukla Flight Taxiing (Placeholder)" 
-                                frameborder="0" 
-                                allowfullscreen>
-                            </iframe>
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Video 1 Narrative: The sound of adventure (and adrenaline). The excitement in the tiny terminal when this 18-seater plane's propellers blurred to life was overwhelming. (NOTE: Remember to add your actual YouTube Embed URL in the HTML code).
-                            </p>
-                        </div>
-                        
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Landing: Tenzing-Hillary Airport</h4>
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                            We were aiming for the **Tenzing-Hillary Airport (LUA)** in Lukla, notoriously nicknamed the "World's Most Dangerous Airport." It's an absolute marvel of engineering, perched on a steep mountain ridge. The runway is famously short—just **527 meters (1,729 ft)**—and features an intense **11.7% gradient** to help planes slow down on landing and gain speed for takeoff! We slammed onto the tarmac to a burst of spontaneous applause from every passenger.
-                        </p>
-
-                        <!-- Day 2 Image 2: Lukla Sign -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x350/10b981/ffffff?text=Lukla+Airport+Sign+9200ft" alt="The iconic Tenzing-Hillary Airport sign" class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Caption 4: We made it! Touchdown at **2800 m / 9,200 ft**. The air is thin, sharp, and smells of pine and possibility. The trek *officially* begins NOW.
-                            </p>
-                        </div>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">A Tribute to Pasang Lhamu Sherpa</h4>
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                            Right past the landing area, we entered the local governmental area named in honor of a true national hero: **Khumbu Pasanglhamu Rural Municipality**. It bears the name of **Pasang Lhamu Sherpa**, the legendary mountaineer who became the first **Nepali woman** to summit Mount Everest on April 22, 1993, on her fourth, determined attempt. Her life embodied resilience and defied patriarchal norms, leaving an incredible legacy for Nepali women everywhere.
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">Lukla to Phakding: Our First Steps</h4>
-                        <p class="text-stone-700 leading-relaxed mb-4">
-                            After the adrenaline subsided, our trekking officially began with the gentle descent to **Phakding** (our first overnight stop). The trail is considered the easiest of the EBC trek days, covering about **7.5 km (4.6 miles)**. We were immediately immersed in the beauty of the Khumbu, walking through traditional Sherpa villages, past lush forests, and following the roaring **Dudh Kosi River (Milk River)**.
-                        </p>
-
-                        <!-- Day 2 Teahouse Image -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x400/65a30d/ffffff?text=Phakding+Teahouse" alt="Cozy teahouse room in Phakding" class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Caption 7: Home for the night. Phakding (**2610 m / 8,560 ft**). After the rollercoaster of the last 48 hours, this simple teahouse room and a hot cup of tea felt like pure luxury.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold border-b border-stone-200 pb-2 mb-3">Key Stats</h4>
-                            <ul class="space-y-2 text-stone-700">
-                                <li><strong>Flight:</strong> 25 Minutes</li>
-                                <li><strong>Trek:</strong> 4-5 Hours</li>
-                                <li><strong>Altitude:</strong> <span class="font-bold text-green-700">2800m ↘ 2610m</span></li>
-                            </ul>
-                        </div>
-                        <div id="luklaCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-emerald-700">Lukla: The Himalayan Gauntlet</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click to read more</p>
-                            <div id="luklaText" class="hidden">
-                                <p class="text-stone-700 font-semibold">Tenzing-Hillary Airport Stats:</p>
-                                <ul class="list-disc pl-5 text-sm text-stone-700 mt-1 space-y-1">
-                                    <li>Runway: 527m (1,729 ft)</li>
-                                    <li>Gradient: 11.7%</li>
-                                    <li>Namesakes: Sir Edmund Hillary & Tenzing Norgay</li>
-                                </ul>
-                                <p class="text-stone-700 mt-2">
-                                    This "World's Most Dangerous Airport" is the true start to the adventure!
-                                </p>
-                            </div>
-                        </div>
-                        <div id="sightsCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-emerald-700">Sights & Trail Rules</h4>
-                             <p class="text-sm text-stone-500 mb-2">Click to reveal the essentials!</p>
-                            <div id="sightsText" class="hidden">
-                                <p class="text-stone-700 mt-2">
-                                    <strong>Cultural Custom:</strong> Always walk **clockwise** around Tibetan Buddhist monuments like Mani Walls (engraved stones) and prayer wheels!
-                                </p>
-                                <p class="text-stone-700 mt-2">
-                                    <strong>Traffic Jam:</strong> Give way to long trains of **dzos** (yak-cow hybrids) and donkeys, always yielding to the **uphill** side of the trail.
-                                </p>
-                                <!-- Day 2 Image 3: Suspension Bridge -->
-                                <div class="w-full max-w-sm mx-auto my-3 rounded-lg overflow-hidden border border-stone-200">
-                                    <img src="https://placehold.co/400x300/fcd34d/000000?text=Prayer+Flags+on+Bridge" alt="Suspension bridge with prayer flags" class="w-full h-auto object-cover">
-                                    <p class="text-xs p-2 text-stone-600 italic bg-stone-50">
-                                        Caption 5: The first suspension bridge over the Dudh Koshi, covered in colorful prayer flags.
-                                    </p>
-                                </div>
-                                <!-- Day 2 Video 2: Suspension Bridge Crossing -->
-                                <div class="w-full max-w-sm mx-auto my-3 rounded-lg overflow-hidden border border-stone-200">
-                                    <iframe class="w-full aspect-video" 
-                                        src="" 
-                                        title="Suspension Bridge Crossing (Placeholder)" 
-                                        frameborder="0" 
-                                        allowfullscreen>
-                                    </iframe>
-                                    <p class="text-xs p-2 text-stone-600 italic bg-stone-50">
-                                        Video 2 Narrative: A short clip walking across the bridge. A true test of balance, especially when a train of *dzopkyu* (yak-cow hybrids) crosses with you! (NOTE: Remember to add your actual YouTube Embed URL in the HTML code).
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                   </div>
+                   <!-- 5 Image Gallery (User Images Integrated) -->
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="PXL_20251007_010343895.jpg" alt="The Twin Otter at Lukla Airport">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251007_024243178.jpg" alt="Pasang Lhamu Memorial Gate">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251016_013911889.jpg" alt="Golden Statues of Hillary and Tenzing">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251016_053433367.MP.jpg" alt="Tenzing Hillary Airport History Sign">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251008_034316009.MP.jpg" alt="Waterfall en route to Phakding">
+                       </div>
+                   </div>
                 </div>
-            </div>
 
-            <!-- DAY 3 CONTENT -->
-            <div id="day3Content" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow space-y-6">
-                        <h3 class="text-2xl font-bold text-emerald-800 border-b pb-2 mb-4">Day 3: The Ascent to Namche Bazaar—Conquering the Khumbu's Heart</h3>
-                        
-                        <p class="text-stone-700 leading-relaxed">
-                            This is the day the **Everest Base Camp trek** truly transforms. We leave the gentle undulations of the valley floor behind and begin the relentless, rewarding climb towards **Namche Bazaar**, the vibrant, horseshoe-shaped capital of the Khumbu region, sitting at a formidable altitude of **3,440 m (11,286 ft)**.
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Morning Walk and the First Giants</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            The day starts easy from Phakding (**2,610 m / 8,560 ft**), following the beautiful, milky-white **Dudh Kosi River**. We pass through charming, traditional hamlets like **Benkar** and **Monjo**, where every prayer flag and carved stone whispers history. Early in the trek, your eyes are immediately drawn upward to a magnificent, snow-fluted peak dominating the skyline—the majestic **Kusum Kanguru**.
-                        </p>
-                        
-                        <!-- Day 3 Image 1: Kusum Kanguru -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x400/34d399/ffffff?text=Kusum+Kanguru+Peak+6367m" alt="The magnificent, snow-fluted peak of Kusum Kanguru." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **Kusum Kanguru** (The Three Snow-Gods): This distinctive, triangular peak stands tall at **6,367 m (20,890 ft)**. It’s one of the first true high peaks to greet you, a powerful, awe-inspiring foreshadowing of the giants to come.
-                            </p>
+                <!-- DAY 3 CONTENT: NAMCHE -->
+                <div id="day3Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 3: Entering the Realm of the Gods</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Namche Bazaar (3,440m)</span> | <span>🌐 UNESCO Site Entry</span> | <span>🌉 Hillary Bridge</span>
                         </div>
-
-                        <p class="text-stone-700 leading-relaxed">
-                             As we progress, we encounter spectacular, ribbon-like high **waterfalls** tumbling down the sheer rock faces, their constant, powerful roar forming the dramatic soundtrack of the valley.
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            We presented our permits at Monjo, officially stepping into **Sagarmatha National Park**, a UNESCO World Heritage Site protecting the roof of the world. The air smelled of pine and juniper forests. The trail dropped steeply to the river confluence before presenting the ultimate test: the **Hillary Suspension Bridge**. Hanging 135 meters above the roaring Dudh Koshi, covered in fluttering prayer flags, it is a dizzying gateway to the steep ascent. As we climbed, we kept our eyes peeled for the Danphe (national bird) in the undergrowth. Arriving at Namche Bazaar, the Sherpa capital shaped like a horseshoe amphitheater, felt like arriving at a metropolis in the clouds.
                         </p>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">Entering Sagarmatha National Park</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            Soon, we arrive at the official checkpoint in **Monjo**, marking our formal entrance into the **Sagarmatha National Park**, a protected UNESCO World Heritage Site. This is where the landscape transforms into a raw, highly protected alpine wilderness. For trekkers, this is the administrative hurdle—checking your TIMS card and purchasing the Park Entry Permit (NPR 3,000), the small price for the privilege of setting foot in the heart of the world’s tallest peaks.
-                        </p>
-
-                        <!-- NEW Day 3 Image 2: Sagarmatha National Park Entry Gate -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200 my-4">
-                            <img src="https://placehold.co/600x350/1e40af/ffffff?text=Sagarmatha+National+Park+Gate" alt="The entrance gate to Sagarmatha National Park in Monjo." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Visual Log: The formal entryway into Sagarmatha National Park at Monjo. This is where the landscape shifts from gentle foothills to high alpine wilderness.
-                            </p>
-                        </div>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Great Divide: Crossing the Hillary Bridge</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            After Monjo, the trail is a final series of gentle slopes that lead you to the day’s most exhilarating, and perhaps nerve-wracking, crossing: the iconic **Hillary Bridge** (also known as the Larja Dobhan bridge).
-                        </p>
-
-                        <!-- Day 3 Video/Image 3: Hillary Bridge -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200 my-4">
-                            <iframe class="w-full aspect-video" 
-                                src="" 
-                                title="Crossing the Hillary Suspension Bridge (Placeholder)" 
-                                frameborder="0" 
-                                allowfullscreen>
-                            </iframe>
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Video Narrative: This breathtakingly high suspension bridge sways hundreds of feet above the deep gorge where the **Bhote Kosi** and **Dudh Kosi rivers converge**. Adorned with thousands of colorful prayer flags, it feels like a true physical and spiritual gateway to the high Khumbu. Be sure to look down at the raging, milky-blue waters far below! (NOTE: Remember to add your actual YouTube Embed URL in the HTML code).
-                            </p>
-                        </div>
-                        
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Relentless Climb to the Sherpa Capital</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            Once across the swaying Hillary Bridge, the real work begins. You face a relentless, zig-zagging climb that gains over **830 meters (2,723 ft)** in vertical elevation, often winding through a beautiful, dense pine forest. This ascent takes a solid **2-3 hours** of non-stop, determined walking. You're huffing and puffing, feeling the altitude bite with every labored breath. Every 50 steps is a psychological victory!
-                        </p>
-
-                        <!-- Day 3 Image 4: Namche First Glimpse / Trail View -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x400/fcd34d/000000?text=First+Glimpse+of+Everest+on+Climb" alt="Steep trail view with possible Everest glimpse." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                Caption: The ultimate reward for the sweat and strain: at a small rest stop about halfway up the ascent, a tantalizing first glimpse of **Mount Everest** (Sagarmatha) herself, peering out from behind Lhotse, if the clouds permit!
-                            </p>
-                        </div>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">Namche Bazaar: The Jewel in the Mountain's Crown</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            Finally, the steep path levels out, and after one last turn, the sight that greets you is pure ecstasy: **Namche Bazaar** suddenly unfolds—a vibrant, tiered, horseshoe-shaped hub carved right into the mountainside. The feeling of arrival is genuinely euphoric. You have made it to the true Sherpa Capital!
-                        </p>
-                        <p class="text-stone-700 leading-relaxed">
-                            The town is utterly dominated by two colossal, snow-capped mountains that stand guard over the valley:
-                            <ul class="list-disc pl-5 text-stone-700 mt-2 space-y-1">
-                                <li>**Thamserku** (**6,608 m / 21,680 ft**): Stands dramatically to the east, its huge, icy face directly overlooking the town.</li>
-                                <li>**Kongde Ri** (**6,187 m / 20,299 ft**): Forms the imposing western wall of the Namche amphitheater.</li>
-                            </ul>
-                        </p>
-                        <p class="text-stone-700 leading-relaxed">
-                            Namche is the alpine metropolis, a captivating blend of tradition and modernity. It’s the largest and wealthiest settlement in the Khumbu, boasting everything from famous bakeries and gear shops to ATMs and a vibrant Saturday market. It’s the **perfect place to rest, explore, and—most importantly—acclimatize** before venturing higher into the thin air.
-                        </p>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <div class="bg-white p-4 rounded-lg shadow min-h-60 flex flex-col justify-center items-center text-center">
-                            <h4 class="text-lg font-bold text-emerald-800 border-b w-full pb-2 mb-3">The Climb to Namche</h4>
-                            <div class="w-full h-32 bg-stone-200 rounded-lg flex items-center justify-center text-stone-500 italic text-sm p-3">
-                                [Placeholder for Trekkers on the Steep Ascent to Namche]
-                            </div>
-                            <p class="text-xs text-stone-600 mt-3">
-                                Start: 2,610m (8,560ft) <br> End: 3,440m (11,286ft)
-                            </p>
-                        </div>
-                        
-                        <div id="parkEntryCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-emerald-700">Sagarmatha National Park</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click for Entry Details</p>
-                            <div id="parkEntryText" class="hidden">
-                                <p class="text-stone-700">
-                                    **Official Checkpoint:** Monjo. Ensure you have your TIMS Card and Park Entry Permit to pass into the protected zone.
-                                </p>
-                                <p class="text-stone-700 mt-2">
-                                    **Wildlife:** Keep an eye out for Himalayan Tahr (wild goats) scaling the cliffs and the brightly colored Danphe (Lophophorus), Nepal’s national bird, in the lower forests.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div id="namcheSightsCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-amber-700">Namche Highlights</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click to reveal what to do!</p>
-                            <div id="namcheSightsText" class="hidden">
-                                <p class="text-stone-700 font-semibold mb-2">Crucial Acclimatization Activities (Day 4):</p>
-                                <ul class="list-disc pl-5 text-sm text-stone-700 space-y-1">
-                                    <li>Visit the **Sherpa Museum** for climbing history.</li>
-                                    <li>Hike up to the **Everest View Hotel** (tomorrow's task!)</li>
-                                    <li>Spin the massive **prayer wheels** for good karma.</li>
-                                    <li>Indulge in a slice of apple pie from a local **bakery**—a welcome treat after the climb!</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                   </div>
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="PXL_20251009_030112610.jpg" alt="Sagarmatha National Park Gate">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Hillary+Suspension+Bridge" alt="Hillary Suspension Bridge">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251009_031514610.jpg" alt="Snowy Peaks near Namche">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Donkey+Train" alt="Supply Yaks and Donkeys">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Sherpa+Metropolis" alt="Entry to Namche">
+                       </div>
+                   </div>
                 </div>
-            </div>
 
-            <!-- DAY 4 CONTENT -->
-            <div id="day4Content" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    
-                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow space-y-6">
-                        <h3 class="text-2xl font-bold text-emerald-800 border-b pb-2 mb-4">Day 4: Acclimatize THIS! Brunch with Everest</h3>
-                        
-                        <p class="text-stone-700 leading-relaxed">
-                            Waking up in Namche Bazaar (**3,440 m / 11,286 ft**) feels like being in a secret metropolis in the clouds. The cardinal rule for acclimatization day is simple: **"climb high, sleep low."** Our mission? A solid day hike up to the famed **Hotel Everest View** (**3,880 m / 12,730 ft**), with a crucial stop at the Sagarmatha National Park viewpoint, before returning to the "comfort" of Namche's altitude for the night.
-                        </p>
-                        <p class="text-stone-700 leading-relaxed">
-                            The morning starts with another steep climb right out of the gate. Just when you think you're done with the "Namche Hill" from yesterday, you find it has an upstairs. But every ounce of effort is repaid, tenfold, the moment you clear the ridge.
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Balcony of the Gods</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            Our first stop is the official Sagarmatha National Park gateway and viewpoint, home to the **Tenzing Norgay Memorial**. You walk through the colorful gate, and the entire Himalayan pantheon just explodes into view. And there, standing watch, is a bronze statue of the man who started it all: Tenzing Norgay, ice axe raised in triumph. But what he's pointing at... that's the moment.
-                        </p>
-
-                        <!-- Day 4 Image 1: Tenzing Statue -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x400/0ea5e9/ffffff?text=Tenzing+Norgay+Memorial+Statue" alt="Tenzing Norgay Memorial Statue pointing towards Everest." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **The Man Himself:** The Tenzing Norgay Memorial, with his arm outstretched, pointing directly at the prize: Mount Everest.
-                            </p>
+                 <!-- DAY 4 CONTENT: ACCLIMATIZATION -->
+                 <div id="day4Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 4: Wildlife and the Giants</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Everest View Hotel (3,880m)</span> | <span>🐐 Himalayan Tahr</span> | <span>🏔️ View: The Big Three</span>
                         </div>
-
-                        <p class="text-stone-700 leading-relaxed">
-                            Your eyes follow his gaze across the valley, and you get your first, crystal-clear view of the roof of the world:
-                            <ul class="list-disc pl-5 text-stone-700 mt-2 space-y-1">
-                                <li>**Mount Everest (8,848.86 m):** Not the biggest from this angle, but the highest, her rocky summit pyramid peeking shyly over the massive wall of Nuptse.</li>
-                                <li>**Lhotse (8,516 m):** The "South Peak," an impenetrable wall of rock and ice, stands shoulder-to-shoulder with Everest.</li>
-                                <li>**Ama Dablam (6,812 m):** The undisputed star of the show from this angle. The "Matterhorn of the Himalayas," a stunning, impossibly steep peak that dominates the view to the right.</li>
-                            </ul>
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            The slopes around Namche are alive. We were lucky to spot a herd of **Himalayan Tahr**—wild goats with thick, reddish-brown coats—balancing precariously on the cliffs near Syangboche. From the Everest View Hotel terrace, the theater of the Himalayas opened up. We could clearly identify the 'Big Three': **Everest (8,848m)** peeking shyly over the massive Nuptse wall, and **Lhotse (8,516m)** standing guard. To the right, **Ama Dablam** (6,812m) displayed her perfect, jewelry-box shape. We visited the Khumjung Monastery, famous for housing a purported "Yeti Scalp," before returning to Namche.
                         </p>
-                        <p class="text-stone-700 leading-relaxed">
-                            The 360° panorama is staggering. The sacred, unclimbed peak of Khumbila watches over Namche from behind, while the giant ice walls of Thamserku and Kongde Ri box you into this magnificent alpine arena. It's hard to breathe, and for once, it’s not just the altitude.
-                        </p>
-
-                        <!-- Day 4 Image 2: Panorama -->
-                        <div class="w-full max-w-2xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/700x400/16a34a/ffffff?text=Everest+Lhotse+Ama+Dablam+Panorama" alt="Panoramic view of Everest, Lhotse, and Ama Dablam from the viewpoint." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **The Balcony of the Gods:** The first clear view. From left to right: the Everest/Lhotse/Nuptse wall, and the stunning, sharp peak of Ama Dablam.
-                            </p>
-                        </div>
-
-                        <!-- PLAQUE SECTION -->
-                        <div class="mt-8">
-                            <h4 class="text-xl font-semibold text-emerald-700 mb-4 text-center border-t border-b border-stone-300 py-3">Tenzing Norgay Memorial Plaques</h4>
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-                                <!-- Plaque 1 -->
-                                <div class="plaque-card">
-                                    <h5>TENZING NORGAY SHERPA (MAY, 1914 - MAY 1986)</h5>
-                                    <p class="italic">"The Gentleman from Chomolungma (Everest)"</p>
-                                    <p class="mt-2">"...A life is full of accidents...But the Sherpa, Tenzing Norgay, is not one of these... It was no accident that it was he...who achieved what he did... There is a flame in Tenzing, a marvelously strong and pure flame... In his moment of triumph, what he felt in his heart was gratitude to Everest..." (JAMES RAMSEY ULLMAN)</p>
-                                    <p class="mt-2">On MAY 29, 1953 Tenzing Norgay Sherpa and Sir Edmund Hillary became the first to reach the summit of Mount Everest (29,028 feet)...an enduring symbol of the human spirit...</p>
-                                    <p class="mt-2 font-semibold">DEDICATION</p>
-                                    <p class="italic">"A homecoming..."<br>"In memory of our beloved father, husband and to all who dare to dream"</p>
-                                    <p class="mt-2 font-semibold">"...Be Strong, Make Others Great..."<br>(Tenzing Norgay Sherpa)</p>
-                                </div>
-                                <!-- Plaque 2 -->
-                                <div class="plaque-card">
-                                    <h5>MAJOR EXPLORATIONS</h5>
-                                    <ul class="list-disc pl-4 space-y-1 text-xs">
-                                        <li>1935 - Mt. Everest Reconnaissance</li>
-                                        <li>1938 - H.W. Tilman Everest Expedition 27,330ft</li>
-                                        <li>1952 - Swiss Mt. Everest Expedition, Spring 28,360ft with Raymond Lambert</li>
-                                        <li>1953 - British Mt. Everest Expedition with Sir Edmund Hillary on 29th May</li>
-                                    </ul>
-                                    <h5 class="mt-4">MAJOR AWARDS</h5>
-                                    <ul class="list-disc pl-4 space-y-1 text-xs">
-                                        <li>Nepal - Tara, Padma Vibardan, Nepal</li>
-                                        <li>Padma Bhusan, India</li>
-                                        <li>George Medal, U.K.</li>
-                                        <li>Legion of Honour, France</li>
-                                        <li>The Cullum Geographical Medal, U.S. 1953</li>
-                                        <li>The Hubbard Medal, U.S.A.</li>
-                                    </ul>
-                                </div>
-                                <!-- Plaque 3 -->
-                                <div class="plaque-card">
-                                    <h5>MIYOLANGSANGMA (The Deity)</h5>
-                                    <p>In Tibetan Buddhist scriptures, the deity lives on Mount Everest, the holy fortress known as Sagarmatha and Chomolungma for Sherpas and Tibetans.</p>
-                                    <p class="mt-2">Miyolangsangma is one of the five long-life sisters and the virtuous deities, giving boon to the people in the Khumbu area in general. She is a golden-hued goddess...and hands out the jewels of wishes to those deserving.</p>
-                                    <p class="mt-2">Climbers of Chomolungma (Mount Everest) seek her favor...it is said that Tenzing Norgay Sherpa strictly followed...and this allowed him to be the first to summit Everest along with Sir Edmund Hillary...</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- END PLAQUE SECTION -->
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">Brunch at the Top of the World</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            After being thoroughly humbled, we continued our hike to the legendary **Hotel Everest View**. Sitting at **3,880 meters (12,730 ft)**, it held the Guinness World Record for the "highest placed hotel in the world" for years. The terrace was buzzing with trekkers, all with the same silly, euphoric grin. We grabbed a table and ordered the most decadent, well-deserved French toast and hot chocolate of our lives. Eating a hot meal while gazing directly at Ama Dablam, Lhotse, and Everest is an experience that borders on the spiritual.
-                        </p>
-                        
-                        <!-- Day 4 Image 3: Brunch with a View -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x400/c2410c/ffffff?text=Brunch+at+Hotel+Everest+View" alt="Hot chocolate and french toast on a terrace with Ama Dablam in the background." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **The Most Beautiful Restaurant Patio on Earth:** Hot chocolate and French toast at 3,880m, with Ama Dablam as our dining companion.
-                            </p>
-                        </div>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">Conservation and Culture</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            On our way down, we stopped at the **Sagarmatha Next** museum, a fascinating center dedicated to art and, most importantly, sustainability. We learned about the incredible work of the **Sagarmatha Pollution Control Committee (SPCC)** and the challenges of managing waste in this remote, high-altitude environment. We even had the privilege of meeting Mr. Tommy, a gentleman from Sweden involved with the SPCC, who shared insights into their vital work.
-                        </p>
-
-                        <!-- Day 4 Image 4: Sagarmatha Next -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x350/06b6d4/ffffff?text=Sagarmatha+Next+Museum" alt="The Sagarmatha Next art and sustainability center." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **Leaving a Lighter Footprint:** The Sagarmatha Next center, an inspiring place teaching trekkers about the SPCC's work to keep the Khumbu clean.
-                            </p>
-                        </div>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Perfect Wind-Down</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            We hiked back down to Namche for a very late lunch around 2:30 PM. The rest of the afternoon was pure, blissful laziness—the other critical part of acclimatization. We soaked in the views from our lodge, wandered through the town's vibrant market, and just let our bodies catch up. The day ended, as all perfect trekking days should, with a massive, steaming, wonderful plate of **Dal Bhat** at our hotel.
-                        </p>
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <!-- Day 4 Sidebar Cards -->
-                        <div id="acclimatizeCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-emerald-700">Acclimatization Strategy</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click for The Golden Rule</p>
-                            <div id="acclimatizeText" class="hidden">
-                                <p class="text-stone-700 font-semibold">"Climb High, Sleep Low"</p>
-                                <ul class="list-disc pl-5 text-sm text-stone-700 mt-1 space-y-1">
-                                    <li>**Climb High:** Hike to Hotel Everest View (**3,880 m / 12,730 ft**).</li>
-                                    <li>**Sleep Low:** Return to sleep at Namche Bazaar (**3,440 m / 11,286 ft**).</li>
-                                </ul>
-                                <p class="text-stone-700 mt-2">
-                                    This forces your body to produce more red blood cells, preparing it for the extreme altitudes to come.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div id="hotelEverestViewCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-amber-700">Hotel Everest View</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click for Hotel Details</p>
-                            <div id="hotelEverestViewText" class="hidden">
-                                <p class="text-stone-700">
-                                    **Guinness World Record:** Once held the record for the highest-placed hotel in the world.
-                                </p>
-                                <p class="text-stone-700 mt-2">
-                                    **The Terrace:** Famous for its panoramic terrace offering direct, unobstructed views of Everest, Lhotse, and Ama Dablam. A cup of tea here is a rite of passage for trekkers.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div id="spccCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-blue-700">Sagarmatha Next (SPCC)</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click for Info on Sustainability</p>
-                            <div id="spccText" class="hidden">
-                                <p class="text-stone-700">
-                                    A vital organization dedicated to managing waste and pollution in Sagarmatha National Park.
-                                </p>
-                                <p class="text-stone-700 mt-2">
-                                    They manage the "carry in, carry out" policy, process tons of waste brought down from the mountains, and educate locals and trekkers on sustainable practices.
-                                </p>
-                            </div>
-                        </div>
-
-                    </div>
+                   </div>
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="Gemini_Generated_Image_kbeg05kbeg05kbeg.png" alt="Annotated view of Everest, Lhotse, Nuptse">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251010_043115657.jpg" alt="Himalayan Tahr on a rock">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Tenzing+Statue" alt="Tenzing Norgay Statue">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Green+Roofs" alt="Khumjung Village">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Coffee+with+View" alt="Hotel Everest View Terrace">
+                       </div>
+                   </div>
                 </div>
-            </div>
 
-            <!-- DAY 5 CONTENT -->
-            <div id="day5Content" class="hidden">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow space-y-6">
-                        <h3 class="text-2xl font-bold text-emerald-800 border-b pb-2 mb-4">Day 5: The Sacred Balcony & the Blessings of Tengboche</h3>
-
-                        <p class="text-stone-700 leading-relaxed">
-                            If Day 4 was about respecting the altitude, Day 5 is your reward. We left Namche Bazaar (**3,440 m / 11,286 ft**) under a crystal-clear, cobalt-blue sky. The air was thin and sharp, so cold it felt like a brittle, perfect sheet of glass. This is the "Everest View Trail," and it lives up to its name.
-                        </p>
-                        <p class="text-stone-700 leading-relaxed">
-                            The first two hours are pure Himalayan magic. The trail, which is a relatively gentle "Nepali flat," contours high along the side of the valley, offering a non-stop panorama of the giants.
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Grandest Walkway on Earth</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            Immediately, **Ama Dablam (6,812 m / 22,349 ft)**, which had been playing peek-a-boo, now stands fully revealed—a magnificent, blade-like peak that would be our constant companion, looking more stunning with every step. But the main event was straight ahead. We had staggering, clear views of the entire Everest massif:
-                            <ul class="list-disc pl-5 text-stone-700 mt-2 space-y-1">
-                                <li>**Mount Everest (8,848.86 m / 29,032 ft):** Her dark, triangular summit pyramid.</li>
-                                <li>**Lhotse (8,516 m / 27,940 ft):** The colossal, gleaming ice wall to Everest's right.</li>
-                                <li>**Nuptse (7,861 m / 25,791 ft):** The long, jagged ridge that forms the frontline.</li>
-                            </ul>
-                        </p>
-
-                        <!-- Day 5 Image 1: Panorama -->
-                        <div class="w-full max-w-2xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/700x400/16a34a/ffffff?text=New+Panorama+Everest+Lhotse+Ama+Dablam" alt="Panoramic view of Everest, Lhotse, and Ama Dablam from the Day 5 trail." class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **The "Everest View Trail" Panorama:** The reward for leaving Namche. The entire Everest massif on the left, with the impossibly beautiful Ama Dablam commanding the view.
-                            </p>
+                <!-- DAY 5 CONTENT: TENGBOCHE -->
+                <div id="day5Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 5: The Golden Glow of Ama Dablam</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Tengboche (3,867m)</span> | <span>🕉️ Monastery Visit</span> | <span>✨ Sunset Spectacle</span>
                         </div>
-                        
-                        <p class="text-stone-700 leading-relaxed">
-                            Along this easy morning path, we passed a beautiful, large stupa—a memorial to 50 years of Everest ascents and a powerful tribute to the Sherpas who make it all possible.
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            Tengboche is not just a place; it's a feeling. We descended deep into the Phunki Tenga valley before the grinding ascent through rhododendron forests to the meadow. As the afternoon clouds cleared, we witnessed the **'Golden Glow'**. The setting sun hit the summit of **Ama Dablam**, turning the ice into liquid gold while the valley floor plunged into purple shadow. The monastery's horns blew, signaling the end of the day, creating a mystical atmosphere that silenced even the most exhausted trekkers.
                         </p>
-
-                        <!-- PLAQUE SECTION DAY 5 -->
-                        <div class="mt-8">
-                            <h4 class="text-xl font-semibold text-emerald-700 mb-4 text-center border-t border-b border-stone-300 py-3">Memorials & Teachings on the Trail</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <!-- Plaque 1 -->
-                                <div class="plaque-card">
-                                    <h5>EVEREST 50th ANNIVERSARY 1953-2003</h5>
-                                    <p>This chorten is built in honour of</p>
-                                    <p class_="font-semibold">TENZING NORGAY AND THE SHERPAS OF EVEREST</p>
-                                    <p>-- all true Tigers of the Snows --</p>
-                                    <p>without whose devotion, skill, courage and sacrifice the great mountain Chomolungma would never have been climbed.</p>
-                                    <p class="mt-2">This chorten is built and blessed with the unerring support of Rolex, Geneva and Pem Pem Norgay (Tenzing's eldest daughter), Tashi (Tenzing's grandson, climbed Everest 1997 & 2002), Judy Pasang, & Dechen Tenzing, Yves Lambert (climbed Everest 2002), Urs, as well as all the people of Munich, Vienna and Zurich, Margaret Gee (Sydney) and the members of the 50th Anniversary Everest Trek from Australia.</p>
-                                    <p class="mt-2">With special thanks to Uncle Nuru Gyaljen for the construction of this chorten</p>
-                                    <p class="mt-2">May 2003.</p>
-                                    <p class="mt-2 text-xl text-center">ཨོཾ་མ་ཎི་པདྨེ་ཧཱུྃ།</p>
-                                </div>
-                                <!-- Plaque 2 -->
-                                <div class="plaque-card">
-                                    <h5>Buddhist Teaching (from Tengboche)</h5>
-                                    <p class="nepali-text">तारा, भ्रम, बत्ती,</p>
-                                    <p class="nepali-text">जादू, शीतको थोपा, फोका,</p>
-                                    <p class="nepali-text">सपना, आकाशको बिजुली वा बादल जस्तै</p>
-                                    <p class="nepali-text">सबै बस्तुहरुलाई त्यस्तै हुन् भनेर जान्नुहोस् ।</p>
-                                    <p class="font-semibold mt-2">गौतम बुद्ध</p>
-                                    <br>
-                                    <p class="italic">Like a star, hallucination, candle,</p>
-                                    <p class="italic">Magical illusion, dewdrop, bubble,</p>
-                                    <p class="italic">Dream, lightning or a cloud</p>
-                                    <p class="italic">Know all compounded phenomena to be like this.</p>
-                                    <p class="font-semibold mt-2">Shakyamuni Buddha</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- END PLAQUE SECTION DAY 5 -->
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Junction and the "Big Drop"</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            We soon reached the tiny, windswept settlement of **Sanasa (3,600 m / 11,811 ft)**, a major crossroads in the Khumbu. A signpost clearly points the way: left for the high passes and Gokyo, or straight on for Everest Base Camp.
-                        </p>
-                        <p class="text-stone-700 leading-relaxed">
-                            And this is where we saw them! On the impossibly steep, grassy slopes across the valley, a herd of **Himalayan Tahr**—mountain goats with magnificent coats—were grazing, defying gravity with every step.
-                        </p>
-                        
-                        <!-- Day 5 Video: Himalayan Tahr -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200 my-4">
-                            <iframe class="w-full aspect-video" 
-                                src="" 
-                                title="Himalayan Tahr Grazing on Cliffs (Placeholder)" 
-                                frameborder="0" 
-                                allowfullscreen>
-                            </iframe>
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **Video: Himalayan Tahr:** We couldn't believe our eyes. A whole herd of Tahr, scaling near-vertical cliffs across the valley. Their agility is simply breathtaking. (NOTE: Remember to add your actual YouTube Embed URL in the HTML code).
-                            </p>
-                        </div>
-                        
-                        <p class="text-stone-700 leading-relaxed">
-                            From here, the trail changes. You pay for the glorious morning with a steep, dusty, knee-jarring descent of nearly **400 meters (1,312 ft)**, all the way down to the river at **Phungi Thanga (3,250 m / 10,663 ft)** for lunch.
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">The Hill to the Heavens</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            After lunch, the real test begins: the "Tengboche Hill." It’s a relentless, 2-hour, **600-meter (1,968 ft)** ascent through a dense rhododendron and pine forest. It's a head-down, one-foot-in-front-of-the-other climb.
-                        </p>
-                        <p class="text-stone-700 leading-relaxed">
-                            Just when you think you can't take another step, the trees part, the trail levels out, and you are greeted by a large, ornate gateway and a line of prayer wheels and stupas. You've arrived at **Tengboche (3,867 m / 12,687 ft)**.
-                        </p>
-
-                        <!-- Day 5 Image 2: Tengboche Monastery -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x400/86198f/ffffff?text=Tengboche+Monastery+with+Ama+Dablam" alt="Tengboche Monastery with Ama Dablam in the background" class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **Peace at Last:** The magnificent Tengboche Monastery, sitting on a wide plateau. The view of Ama Dablam, Lhotse, and Everest from here is perhaps the most famous in all of the Himalayas.
-                            </p>
-                        </div>
-
-                        <h4 class="text-xl font-semibold text-emerald-700 mt-6 mb-3">An Audience with the Monks</h4>
-                        <p class="text-stone-700 leading-relaxed">
-                            We checked into our lodge and, as the air grew colder, made our way back to the monastery for the 3:30 PM prayer ceremony. We slipped off our dusty boots, stepped inside, and were transported. The air was thick with the scent of burning juniper incense. In the dim light, monks of all ages sat chanting in deep, resonant, guttural tones. The sound of long horns, clashing cymbals, and rhythmic drums filled the sacred space. It was a powerful, humbling experience—a moment of pure spiritual stillness.
-                        </p>
-
-                        <!-- Day 5 Image 3: Sunset -->
-                        <div class="w-full max-w-xl mx-auto rounded-lg overflow-hidden border border-stone-200">
-                            <img src="https://placehold.co/600x350/f97316/ffffff?text=Sunset+on+Everest+from+Tengboche" alt="Sunset light hitting the peak of Mount Everest" class="w-full h-auto object-cover">
-                            <p class="text-sm p-3 text-stone-600 italic bg-stone-50">
-                                **The Coldest, Most Beautiful Sunset:** The day's last light set Everest and Ama Dablam ablaze in shades of orange and gold. Absolutely spectacular, and utterly frigid.
-                            </p>
-                        </div>
-
-                    </div>
-                    
-                    <div class="space-y-6">
-                        <!-- Day 5 Sidebar Cards -->
-                        <div id="tahrCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-emerald-700">Wildlife Sighting: Himalayan Tahr</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click for facts</p>
-                            <div id="tahrText" class="hidden">
-                                <p class="text-stone-700 font-semibold">"Gravity-defying Goats"</p>
-                                <ul class="list-disc pl-5 text-sm text-stone-700 mt-1 space-y-1">
-                                    <li>These are not true goats, but are more closely related to wild sheep.</li>
-                                    <li>The males have magnificent, lion-like manes around their necks and chests.</li>
-                                    <li>Their hooves have a rubbery core that grips smooth rock, allowing them to graze on impossibly steep cliffs.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div id="tengbocheCard" class="interactive-card bg-white p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold text-purple-700">Tengboche Monastery</h4>
-                            <p class="text-sm text-stone-500 mb-2">Click for details</p>
-                            <div id="tengbocheText" class="hidden">
-                                <p class="text-stone-700">
-                                    **The Spiritual Heart of the Khumbu:** This is the largest and most important Tibetan Buddhist monastery in the region.
-                                </p>
-                                <p class="text-stone-700 mt-2">
-                                    **Resilience:** It was originally built in 1916, destroyed by an earthquake in 1934, rebuilt, and then tragically destroyed again by a fire in 1989. The current structure is a testament to the Sherpa community's devotion, funded by local efforts and international donations.
-                                </p>
-                                <p class="text-stone-700 mt-2">
-                                    **Prayer Ceremony:** Trekkers are welcome to respectfully observe the 3:30 PM prayer ceremony (puja), a deeply moving experience of chanting, horns, and cymbals.
-                                </p>
-                            </div>
-                        </div>
-
-                    </div>
+                   </div>
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="PXL_20251015_114122615.jpg" alt="Golden Sunset on Ama Dablam">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="images/tengboche_monastery.jpg" onerror="this.src='https://placehold.co/400x300/red/white?text=Tengboche+Monastery'" alt="Tengboche Monastery Main">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Rhododendron+Forest" alt="Forest Trail">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Prayer+Wheels" alt="Ancient Prayer Wheels">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Valley+Drop" alt="Phunki Tenga Valley">
+                       </div>
+                   </div>
                 </div>
-            </div>
-            <!-- END DAY 5 CONTENT -->
 
+                <!-- DAY 6 CONTENT: DINGBOCHE -->
+                <div id="day6Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 6: The Eyes of the Buddha</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Dingboche (4,410m)</span> | <span>👀 Stupas</span> | <span>🌬️ Alpine Desert</span>
+                        </div>
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            Leaving the tree line, we entered the realm of the stupas. Just past Pangboche, we encountered ancient white chortens with the **Wisdom Eyes of the Buddha** painted on them, gazing eternally at the peaks. These structures act as spiritual waypoints in the barren, wind-swept landscape of Dingboche. Stone walls crisscross the landscape here, protecting barley crops. The view of **Taboche** and **Cholatse** from here is imposing, their vertical rock faces looming over the valley like fortress walls.
+                        </p>
+                   </div>
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="PXL_20251011_034740100.MP~2.jpg" alt="Stupa with Buddha Eyes and Mountain Background">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="images/dingboche_lodge.jpg" onerror="this.src='https://placehold.co/400x300/stone/white?text=Dingboche+Village'" alt="Dingboche Stone Walls">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="images/ama_dablam_view.jpg" onerror="this.src='https://placehold.co/400x300/stone/white?text=Ama+Dablam+Sharp'" alt="Ama Dablam Angle">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Alpine+Scrub" alt="High Alpine Vegetation">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Pangboche+Gompa" alt="Oldest Monastery">
+                       </div>
+                   </div>
+                </div>
+
+                <!-- DAY 7 CONTENT: NAGARJUN -->
+                <div id="day7Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 7: The 5000m Barrier</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Nagarjun Hill (5,100m)</span> | <span>🫁 O₂ Level: 55%</span> | <span>👀 View: Makalu (8,485m)</span>
+                        </div>
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            "Rest" at 4,400m is a relative term. We tackled <strong>Nagarjun Hill</strong> directly behind the village. It is a steep, lung-busting scramble up loose rock, but essential for acclimatization. Reaching the top at 5,100m, we broke the 5km altitude barrier. The reward was a stunning look at <strong>Makalu</strong>, the fifth highest mountain in the world, looking like a massive pyramid in the east. We sat at the top for 30 minutes, practicing pressure breathing, before descending to the thicker air of the lodge for garlic soup.
+                        </p>
+                   </div>
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="https://placehold.co/800x600/stone/white?text=View+from+Nagarjun" alt="Makalu View">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Steep+Ascent" alt="Climbing the Ridge">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Prayer+Flags+Top" alt="Summit Flags">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Imja+Tse+Valley" alt="Valley View Below">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Garlic+Soup" alt="Sherpa Medicine">
+                       </div>
+                   </div>
+                </div>
+
+                 <!-- DAY 8 CONTENT: LOBUCHE -->
+                 <div id="day8Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 8: Walking with Ghosts</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Lobuche (4,940m)</span> | <span>🕯️ Thukla Pass Memorials</span> | <span>🧊 Khumbu Glacier</span>
+                        </div>
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            The climb up to the <strong>Thukla Pass</strong> is steep and emotional. At the top lies a memorial ground dedicated to climbers who have perished on Everest. Stone chortens stand silent against the backdrop of Pumori. We walked past memorials for Scott Fischer and Rob Hall, a somber reminder of the mountain's indifference. Beyond the pass, the trail turns to rock and ice as we followed the lateral moraine of the Khumbu Glacier. We arrived at Lobuche, a bleak, wind-swept settlement that feels like an outpost on the moon.
+                        </p>
+                   </div>
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="https://placehold.co/800x600/stone/white?text=Thukla+Pass+Memorials" alt="Climber Memorials">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Khumbu+Glacier+Moraine" alt="Glacier Edge">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Lobuche+Settlement" alt="Lobuche Teahouses">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Pumori+View" alt="Mt Pumori">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Nuuptse+Wall" alt="Nuptse Wall">
+                       </div>
+                   </div>
+                </div>
+
+                <!-- DAY 9 CONTENT: GORAKSHEP -->
+                <div id="day9Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 9: The Frozen Lakebed</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Gorakshep (5,164m)</span> | <span>🏜️ Moonscape</span> | <span>🧊 Glacial Pools</span>
+                        </div>
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                            The trail to Gorakshep is a chaotic jumble of glacial scree. We are now officially in the high alpine zone, where vegetation ceases to exist. Gorakshep sits on a frozen, sandy lakebed at 5,164m. It was the original Base Camp for the 1953 expedition. The altitude here is punishing; simple tasks like packing a sleeping bag leave you breathless. But the beauty is stark and alien. We watched the sun dip behind the sharp peaks, illuminating the glacial pools that freeze solid overnight.
+                        </p>
+                   </div>
+                   <!-- User Images Integrated Here -->
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="PXL_20251015_043407889.jpg" alt="Glacial Pools and Snow">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251015_011017531.jpg" alt="Sharp Himalayan Peak">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251015_053238842.MP.jpg" alt="High peaks and prayer flags">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="images/gorakshep_night.jpg" onerror="this.src='https://placehold.co/400x300/black/white?text=Gorakshep+Night'" alt="Night Sky">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="https://placehold.co/400x300/stone/white?text=Sandy+Lakebed" alt="Gorakshep Terrain">
+                       </div>
+                   </div>
+                </div>
+
+                 <!-- DAY 10 CONTENT: EBC -->
+                 <div id="day10Content" class="hidden tab-content animate-fade-in space-y-8">
+                    <div class="prose max-w-none">
+                        <h3 class="text-2xl font-bold text-stone-800 mb-2">Day 10: The Monochrome World</h3>
+                        <div class="flex gap-4 text-sm text-stone-500 mb-4">
+                           <span>📍 Everest Base Camp (5,364m)</span> | <span>❄️ Snow & Ice</span> | <span>🧊 Khumbu Icefall</span>
+                        </div>
+                        <p class="text-stone-700 leading-relaxed text-lg serif-text">
+                             The final march to Base Camp is a walk through a frozen gallery. We navigated the undulating spine of the Khumbu Glacier, surrounded by ice pinnacles (penitentes) resembling white sharks' teeth. The landscape is monochrome—black rock, white ice, and deep blue sky. Sitting in the snow at <strong>5,364m</strong>, surrounded by the amphitheater of the world's highest peaks, the sense of scale is obliterating. We stood at the foot of the terrifying <strong>Khumbu Icefall</strong>, humbled by the sheer verticality of the ice.
+                        </p>
+                   </div>
+                   <!-- User Images Integrated Here -->
+                   <div class="gallery-grid">
+                       <div class="gallery-item gallery-main editable-image-container">
+                           <img src="PXL_20251013_040913507.MP.jpg" alt="Trekker sitting in snow">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251015_051807142.jpg" alt="Snow texture closeup">
+                       </div>
+                       <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251013_101451070.jpg" alt="Celebration at High Altitude">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="PXL_20251014_235801190.jpg" alt="Dusk over the peaks">
+                       </div>
+                        <div class="gallery-item gallery-sub editable-image-container">
+                           <img src="images/ebc_trek.jpg" onerror="this.src='https://placehold.co/400x300/white/stone?text=Khumbu+Icefall'" alt="Icefall Edge">
+                       </div>
+                   </div>
+                </div>
+
+            </div>
         </section>
 
-        <!-- Picture Collage Placeholder -->
-        <section class="bg-emerald-700 text-white rounded-lg shadow p-6 mt-8">
-            <h2 class="text-2xl font-bold mb-3">Collage of the Journey: A Visual Summary</h2>
-            <p class="mb-4">
-                This space is reserved for a visual summary of the trek—a collage of your favorite photos! When you upload this to GitHub Pages, replace this entire box with a collection of `<img>` tags for a stunning visual summary.
-            </p>
-            <div class="p-6 bg-emerald-800 border border-emerald-500 rounded-lg text-center text-lg italic">
-                [Placeholder for Picture Collage - Upload your image grid here!]
+        <!-- STORYBOOK SECTION (NEW) -->
+        <section class="bg-amber-50 rounded-xl shadow-sm p-8 mb-12 border border-amber-200 relative overflow-hidden">
+            <div class="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10">
+                <span class="text-9xl">📖</span>
+            </div>
+            <div class="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-amber-900 mb-4">Mountain Motivation: The Yeti's Library</h2>
+                    <p class="text-stone-700 text-lg serif-text mb-6">
+                        Every great climber starts with a dream. For our younger trekkers (and the young at heart), here is a special tale of courage found in the high mountains.
+                    </p>
+                    
+                    <!-- INNOVATIVE SLOT: Interactive Book Card -->
+                    <div class="relative group cursor-pointer perspective-1000 inline-block" onclick="openStorybook()">
+                        <div class="absolute inset-0 bg-emerald-200 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                        <div class="relative bg-white p-4 rounded-xl border border-stone-200 shadow-lg transform group-hover:-translate-y-1 transition duration-300 flex items-center gap-6 pr-8">
+                            <!-- Book Icon/Cover -->
+                            <div class="w-16 h-20 bg-emerald-700 rounded-sm flex items-center justify-center text-white text-3xl shadow-md border-l-4 border-emerald-900">
+                                📚
+                            </div>
+                            <div>
+                                <div class="font-bold text-stone-800 text-lg">The Brave Little Yak</div>
+                                <div class="text-xs text-stone-500 mt-1">A Story of Inner Strength</div>
+                            </div>
+                            <div class="ml-auto text-emerald-600 bg-emerald-50 rounded-full p-2">➔</div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="w-full md:w-1/3">
+                     <div class="bg-white/60 p-6 rounded-lg backdrop-blur-sm border border-amber-100">
+                        <h4 class="font-bold text-amber-800 mb-3 flex items-center gap-2">✨ Why Read This?</h4>
+                        <ul class="text-sm text-stone-600 space-y-3">
+                            <li class="flex gap-2"><span class="text-amber-500">★</span> Learn about Sherpa resilience</li>
+                            <li class="flex gap-2"><span class="text-amber-500">★</span> Discover Himalayan animals</li>
+                            <li class="flex gap-2"><span class="text-amber-500">★</span> Find your motivation</li>
+                        </ul>
+                     </div>
+                </div>
             </div>
         </section>
 
     </main>
 
+    <!-- PDF Modal -->
+    <div id="pdfModal" class="fixed inset-0 z-[60] hidden bg-black/90 backdrop-blur-sm flex flex-col transition-opacity duration-300">
+        <div class="flex justify-between items-center p-4 text-white bg-stone-900 border-b border-stone-800">
+            <h3 class="font-bold text-lg flex items-center gap-2">📖 The Brave Little Yak</h3>
+            <button onclick="closeStorybook()" class="px-4 py-2 bg-stone-800 hover:bg-stone-700 rounded-full transition text-sm font-medium border border-stone-700">
+                ✕ Close Book
+            </button>
+        </div>
+        <div class="flex-grow p-4 md:p-8 bg-stone-800 flex justify-center">
+            <div class="w-full max-w-5xl bg-white rounded shadow-2xl h-full overflow-hidden relative">
+                 <!-- Placeholder PDF: Replace src with your actual PDF file path -->
+                 <iframe src="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" class="w-full h-full border-none" title="Storybook PDF"></iframe>
+                 
+                 <div class="absolute inset-0 flex items-center justify-center -z-10 text-stone-400">
+                    Loading Storybook...
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Widget -->
+    <div id="chat-widget">
+        <div id="chat-window">
+            <div class="bg-emerald-700 text-white p-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <!-- Animated Yak SVG -->
+                    <div class="w-10 h-10 bg-white rounded-full overflow-hidden flex items-center justify-center border-2 border-emerald-300">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                            <!-- Fur/Head -->
+                            <path d="M20,40 Q50,10 80,40 Q90,50 85,70 Q50,90 15,70 Q10,50 20,40 Z" fill="#8B4513" />
+                            <!-- Horns -->
+                            <path d="M20,40 Q10,20 30,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <path d="M80,40 Q90,20 70,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <!-- Eyes (Animated) -->
+                            <g class="yak-anim">
+                                <circle cx="35" cy="50" r="5" fill="white" />
+                                <circle cx="35" cy="50" r="2" fill="black" />
+                                <circle cx="65" cy="50" r="5" fill="white" />
+                                <circle cx="65" cy="50" r="2" fill="black" />
+                            </g>
+                            <!-- Nose -->
+                            <ellipse cx="50" cy="65" rx="10" ry="6" fill="#D2B48C" />
+                            <circle cx="46" cy="65" r="1" fill="#5D4037" />
+                            <circle cx="54" cy="65" r="1" fill="#5D4037" />
+                            <!-- Ears (Animated) -->
+                            <path d="M15,50 Q5,45 15,40" fill="#8B4513" class="yak-ear" style="transform-origin: 20px 45px;" />
+                            <path d="M85,50 Q95,45 85,40" fill="#8B4513" class="yak-ear" style="transform-origin: 80px 45px; animation-delay: 1s;" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm">The Friendly Yeti</h4>
+                        <p class="text-xs text-emerald-100">Your Himalayan companion</p>
+                    </div>
+                </div>
+                <button id="closeChat" class="text-white hover:text-emerald-200 font-bold">&times;</button>
+            </div>
+            <div id="chat-messages">
+                <div class="message bot">
+                    <div class="w-8 h-8 min-w-[32px] bg-emerald-100 rounded-full overflow-hidden border border-emerald-200 flex items-center justify-center">
+                         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                            <path d="M20,40 Q50,10 80,40 Q90,50 85,70 Q50,90 15,70 Q10,50 20,40 Z" fill="#8B4513" />
+                            <path d="M20,40 Q10,20 30,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <path d="M80,40 Q90,20 70,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <g class="yak-anim">
+                                <circle cx="35" cy="50" r="5" fill="white" />
+                                <circle cx="35" cy="50" r="2" fill="black" />
+                                <circle cx="65" cy="50" r="5" fill="white" />
+                                <circle cx="65" cy="50" r="2" fill="black" />
+                            </g>
+                            <ellipse cx="50" cy="65" rx="10" ry="6" fill="#D2B48C" />
+                        </svg>
+                    </div>
+                    <div>
+                        Namaste! I am the Friendly Yeti. I know these mountains better than anyone (I live here!). How can I help you prepare for your journey?
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t bg-white flex gap-2">
+                <input type="text" id="chatInput" placeholder="Ask the Yeti..." class="flex-grow border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-emerald-600">
+                <button id="sendMessage" class="bg-emerald-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-emerald-700 transition">
+                    ➤
+                </button>
+            </div>
+        </div>
+        <button id="toggleChat" class="bg-emerald-600 text-white px-5 py-3 rounded-full shadow-lg hover:bg-emerald-700 transition font-bold flex items-center gap-2">
+            ✨ Ask The Yeti
+        </button>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const altitudeData = {
-                labels: ["Lukla", "Phakding", "Namche", "Tengboche", "Dingboche", "Lobuche", "Gorakshep", "Kalapatthar"],
-                altitudes: [9200, 8560, 11286, 12687, 14470, 16207, 16942, 18209] // Using Feet for Chart data consistency
-            };
+            const apiKey = ""; // System will provide key
 
-            // Structured data for interactive counters
-            const mapDetailsData = {
-                ktm: { title: "Kathmandu (KTM)", altitude: "1400m / 4,600ft", duration: "Day 0", distance: "N/A", status: "City Base", description: "The bustling starting point before the adventure truly begins. Drive to Ramechhap starts Day 1." },
-                rmc: { title: "Ramechhap (RMC)", altitude: "474m / 1,555ft", duration: "5 Hr Drive", distance: "130 km", status: "Flight Hub", description: "The small regional airport for flights to Lukla. Day 1 ends here; Day 2 starts with the flight." },
-                lukla: { title: "Lukla (LUK)", altitude: "2800m / 9,200ft", duration: "25 Min Flight", distance: "40 km (Air)", status: "Gateway", description: "The infamous Tenzing-Hillary Airport, the gateway to the Khumbu. Trek begins here." },
-                phk: { title: "Phakding (PHK)", altitude: "2610m / 8,560ft", duration: "4-5 Hrs", distance: "7 km", status: "First Night", description: "Day 2 overnight. A peaceful village on the Dudh Koshi river. Mostly downhill from Lukla." },
-                namche: { title: "Namche Bazaar (NAM)", altitude: "3440m / 11,286ft", duration: "6-7 Hrs", distance: "10 km", status: "Major Trading Hub", description: "Day 3/4 stop. Major ascent, but rewarded with the first views of Everest and a crucial acclimatization day." },
-                tengboche: { title: "Tengboche (TEB)", altitude: "3867m / 12,687ft", duration: "5-6 Hrs", distance: "11 km", status: "Monastic Center", description: "Day 5 stop. Home to the largest Buddhist Monastery in Khumbu. Stunning views of Ama Dablam." },
-                dingboche: { title: "Dingboche (DIB)", altitude: "4410m / 14,470ft", duration: "6-7 Hrs", distance: "12 km", status: "High Valley Camp", description: "Day 6/7 stop. Essential second acclimatization day to prepare for the 16,000+ ft zone." },
-                lob: { title: "Lobuche (LOB)", altitude: "4940m / 16,207ft", duration: "4-5 Hrs", distance: "6 km", status: "High Camp", description: "Day 8 stop. High camp near the Khumbu Glacier. Stop at the Everest Memorial on the way." },
-                gor: { title: "Gorakshep (GOR)", altitude: "5164m / 16,942ft", duration: "3-4 Hrs", distance: "6 km", status: "Final Stop", description: "Day 9 stop. The highest inhabited point, serving as the base for EBC and Kalapatthar excursions." },
-                ebc: { title: "Everest Base Camp (EBC)", altitude: "5364m / 17,600ft", duration: "4 Hrs Round Trip", distance: "6 km Round Trip", status: "Destination Reached!", description: "Day 9 excursion. The goal! Stand beneath the world's highest peak and the Khumbu Icefall (No Everest view from here)." },
-                klt: { title: "Kalapatthar (KLT)", altitude: "5550m / 18,209ft", duration: "3-4 Hrs Round Trip", distance: "4 km Round Trip", status: "Highest Viewpoint", description: "Day 10 excursion. The ultimate viewpoint for the arresting, panoramic views of Mt. Everest." },
-                pangboche: { title: "Pangboche (PGB)", altitude: "3985m / 13,074ft", duration: "7-8 Hrs (From GOR)", distance: "19 km", status: "Rapid Descent", description: "Day 10 overnight. Rapid descent for better recovery and acclimatization to lower altitudes." }
-            };
+            // Tab functionality logic with Animation
+            const dayIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+            
+            dayIds.forEach(id => {
+                const btn = document.getElementById(`btnDay${id}`);
+                const content = document.getElementById(`day${id}Content`);
+                
+                if(btn && content) {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.tab-container button').forEach(b => {
+                            b.classList.remove('tab-active', 'bg-stone-200', 'text-emerald-800');
+                            b.classList.add('text-stone-500');
+                        });
+                        
+                        // Reset animation by removing class
+                        document.querySelectorAll('.tab-content').forEach(c => {
+                            c.classList.add('hidden');
+                            c.classList.remove('animate-fade-in');
+                        });
 
-            const mapDetailsEl = document.getElementById('mapDetails');
-            const detailTitleEl = document.getElementById('detailTitle');
-            const detailStatsEl = document.getElementById('detailStats');
-            const detailDescriptionEl = document.getElementById('detailDescription');
-
-            // Render Map Details
-            const renderMapDetails = (stageKey) => {
-                const data = mapDetailsData[stageKey];
-                if (!data) return;
-                detailTitleEl.textContent = data.title;
-                detailDescriptionEl.textContent = data.description;
-                detailStatsEl.innerHTML = '';
-                detailStatsEl.classList.remove('hidden');
-                const stats = [
-                    { label: "Altitude", value: data.altitude },
-                    { label: "Duration", value: data.duration },
-                    { label: "Distance", value: data.distance }
-                ];
-                stats.forEach(stat => {
-                    const statDiv = document.createElement('div');
-                    statDiv.className = 'flex flex-col p-2 bg-stone-100 rounded-lg border border-stone-200';
-                    statDiv.innerHTML = `<span class="text-xs font-medium text-stone-500 uppercase">${stat.label}</span><span class="text-lg font-bold text-stone-900">${stat.value}</span>`;
-                    detailStatsEl.appendChild(statDiv);
-                });
-            };
-
-            // Setup Chart.js
-            const ctx = document.getElementById('altitudeChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: altitudeData.labels,
-                    datasets: [{
-                        label: 'Altitude (in feet)',
-                        data: altitudeData.altitudes,
-                        borderColor: '#059669',
-                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                        fill: true,
-                        tension: 0.2, 
-                        pointRadius: 6, 
-                        pointBackgroundColor: '#059669'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: (context) => ` ${context.label}: ${context.parsed.y} ft` } }
-                    },
-                    scales: { y: { title: { display: true, text: 'Altitude (ft)' }, beginAtZero: false, min: 4000, max: 19000 } }
+                        btn.classList.add('tab-active', 'bg-stone-200', 'text-emerald-800');
+                        btn.classList.remove('text-stone-500');
+                        content.classList.remove('hidden');
+                        
+                        // Trigger reflow to restart animation
+                        void content.offsetWidth;
+                        content.classList.add('animate-fade-in');
+                    });
                 }
             });
 
-            // Tab functionality
-            const allBtns = [
-                document.getElementById('btnDay1'), document.getElementById('btnDay2'),
-                document.getElementById('btnDay3'), document.getElementById('btnDay4'),
-                document.getElementById('btnDay5')
-            ];
-            const allContent = [
-                document.getElementById('day1Content'), document.getElementById('day2Content'),
-                document.getElementById('day3Content'), document.getElementById('day4Content'),
-                document.getElementById('day5Content')
-            ];
+            const defaultBtn = document.getElementById('btnDay1');
+            if(defaultBtn) defaultBtn.click();
+            
+            // --- IMAGE UPLOAD HANDLER ---
+            const setupImageUploaders = () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
 
-            const activateTab = (activeBtn, activeContent) => {
-                allBtns.forEach(btn => btn.classList.replace('tab-active', 'text-stone-500'));
-                allBtns.forEach(btn => btn.classList.add('border-transparent'));
-                allContent.forEach(content => content.classList.add('hidden'));
+                let currentImgElement = null;
 
-                activeBtn.classList.remove('text-stone-500', 'border-transparent');
-                activeBtn.classList.add('tab-active');
-                activeContent.classList.remove('hidden');
-            };
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file && currentImgElement) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            currentImgElement.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    // Reset
+                    fileInput.value = '';
+                });
 
-            // Initialize tabs - Defaulting to Day 1 for a better start experience
-            activateTab(allBtns[0], allContent[0]);
-
-            // Event Listeners for Tabs
-            allBtns.forEach((btn, index) => {
-                btn.addEventListener('click', () => activateTab(btn, allContent[index]));
-            });
-
-            // Map interaction listeners
-            ['mapKtm', 'mapRmc', 'mapLukla', 'mapPhk', 'mapNamche', 'mapTengboche', 'mapDingboche', 'mapLobuche', 'mapGorakshep', 'mapEBC', 'mapKalapatthar', 'mapPangboche'].forEach(id => {
-                const key = id.replace('map', '').toLowerCase();
-                 // Handle special abbreviations if needed, otherwise just lowercase the ID suffix
-                const actualKey = key === 'gorakshep' ? 'gor' : key === 'kalapatthar' ? 'klt' : key === 'ebc' ? 'ebc' : key;
-                 document.getElementById(id).addEventListener('click', () => renderMapDetails(actualKey));
-            });
-            // Manual overrides for keys that don't perfectly match the ID substring pattern if necessary.
-            // Re-binding specifically to be safe based on original data keys:
-             document.getElementById('mapKtm').addEventListener('click', () => renderMapDetails('ktm'));
-             document.getElementById('mapRmc').addEventListener('click', () => renderMapDetails('rmc'));
-             document.getElementById('mapLukla').addEventListener('click', () => renderMapDetails('lukla'));
-             document.getElementById('mapPhk').addEventListener('click', () => renderMapDetails('phk'));
-             document.getElementById('mapNamche').addEventListener('click', () => renderMapDetails('namche'));
-             document.getElementById('mapTengboche').addEventListener('click', () => renderMapDetails('tengboche'));
-             document.getElementById('mapDingboche').addEventListener('click', () => renderMapDetails('dingboche'));
-             document.getElementById('mapLobuche').addEventListener('click', () => renderMapDetails('lob'));
-             document.getElementById('mapGorakshep').addEventListener('click', () => renderMapDetails('gor'));
-             document.getElementById('mapEBC').addEventListener('click', () => renderMapDetails('ebc'));
-             document.getElementById('mapKalapatthar').addEventListener('click', () => renderMapDetails('klt'));
-             document.getElementById('mapPangboche').addEventListener('click', () => renderMapDetails('pangboche'));
-
-            // Interactive Card toggles
-            const toggleCard = (cardId, textId) => {
-                document.getElementById(cardId).addEventListener('click', () => {
-                    document.getElementById(textId).classList.toggle('hidden');
+                // Find all images in the content containers
+                // Use event delegation for better performance/handling dynamically added elements if any
+                document.addEventListener('click', (e) => {
+                     const container = e.target.closest('.editable-image-container');
+                     if(container){
+                         const img = container.querySelector('img');
+                         if(img){
+                            currentImgElement = img;
+                            fileInput.click();
+                         }
+                     }
                 });
             };
+            setupImageUploaders();
 
-            toggleCard('emotionCard', 'emotionText');
-            toggleCard('airlineCard', 'airlineText');
-            toggleCard('luklaCard', 'luklaText');
-            toggleCard('sightsCard', 'sightsText');
-            toggleCard('parkEntryCard', 'parkEntryText');
-            toggleCard('namcheSightsCard', 'namcheSightsText');
-            toggleCard('acclimatizeCard', 'acclimatizeText');
-            toggleCard('hotelEverestViewCard', 'hotelEverestViewText');
-            toggleCard('spccCard', 'spccText');
-            toggleCard('tahrCard', 'tahrText');
-            toggleCard('tengbocheCard', 'tengbocheText');
+            // --- STORYBOOK MODAL LOGIC ---
+            window.openStorybook = () => {
+                const modal = document.getElementById('pdfModal');
+                modal.classList.remove('hidden');
+                // Prevent body scroll
+                document.body.style.overflow = 'hidden';
+            };
+
+            window.closeStorybook = () => {
+                const modal = document.getElementById('pdfModal');
+                modal.classList.add('hidden');
+                // Restore body scroll
+                document.body.style.overflow = 'auto';
+            };
+
+
+            // --- GEMINI API INTEGRATION ---
+            async function callGemini(prompt, systemInstruction = "") {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] }
+                };
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, API Error.";
+                } catch (error) {
+                    console.error("Gemini Error:", error);
+                    return "Connection error.";
+                }
+            }
+
+            // Chat Widget Logic
+            const chatWindow = document.getElementById('chat-window');
+            const toggleChat = document.getElementById('toggleChat');
+            const closeChat = document.getElementById('closeChat');
+            const chatInput = document.getElementById('chatInput');
+            const sendMessage = document.getElementById('sendMessage');
+            const chatMessages = document.getElementById('chat-messages');
+
+            toggleChat.addEventListener('click', () => {
+                chatWindow.style.display = 'flex';
+                toggleChat.style.display = 'none';
+            });
+
+            closeChat.addEventListener('click', () => {
+                chatWindow.style.display = 'none';
+                toggleChat.style.display = 'flex';
+            });
+
+            const appendMessage = (text, sender) => {
+                const div = document.createElement('div');
+                div.className = `message ${sender}`;
+                
+                // If it's a bot message, prepend the Yak Avatar
+                if (sender === 'bot') {
+                    const avatar = `
+                    <div class="w-8 h-8 min-w-[32px] bg-emerald-100 rounded-full overflow-hidden border border-emerald-200 flex items-center justify-center">
+                         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                            <path d="M20,40 Q50,10 80,40 Q90,50 85,70 Q50,90 15,70 Q10,50 20,40 Z" fill="#8B4513" />
+                            <path d="M20,40 Q10,20 30,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <path d="M80,40 Q90,20 70,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <g class="yak-anim">
+                                <circle cx="35" cy="50" r="5" fill="white" />
+                                <circle cx="35" cy="50" r="2" fill="black" />
+                                <circle cx="65" cy="50" r="5" fill="white" />
+                                <circle cx="65" cy="50" r="2" fill="black" />
+                            </g>
+                            <ellipse cx="50" cy="65" rx="10" ry="6" fill="#D2B48C" />
+                        </svg>
+                    </div>
+                    `;
+                    div.innerHTML = avatar + `<div>${text.replace(/\n/g, '<br>')}</div>`;
+                } else {
+                    div.innerHTML = text.replace(/\n/g, '<br>');
+                }
+                
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            };
+
+            const handleChat = async () => {
+                const text = chatInput.value.trim();
+                if (!text) return;
+                appendMessage(text, 'user');
+                chatInput.value = '';
+                const loadingId = 'loading-' + Date.now();
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message bot';
+                loadingDiv.id = loadingId;
+                
+                // Add Loading Yak Avatar
+                const avatar = `
+                    <div class="w-8 h-8 min-w-[32px] bg-emerald-100 rounded-full overflow-hidden border border-emerald-200 flex items-center justify-center">
+                         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                            <path d="M20,40 Q50,10 80,40 Q90,50 85,70 Q50,90 15,70 Q10,50 20,40 Z" fill="#8B4513" />
+                            <path d="M20,40 Q10,20 30,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <path d="M80,40 Q90,20 70,10" stroke="#D2B48C" stroke-width="5" fill="none" />
+                            <g class="yak-anim">
+                                <circle cx="35" cy="50" r="5" fill="white" />
+                                <circle cx="35" cy="50" r="2" fill="black" />
+                                <circle cx="65" cy="50" r="5" fill="white" />
+                                <circle cx="65" cy="50" r="2" fill="black" />
+                            </g>
+                            <ellipse cx="50" cy="65" rx="10" ry="6" fill="#D2B48C" />
+                        </svg>
+                    </div>
+                    `;
+                
+                loadingDiv.innerHTML = avatar + '<span class="typing-indicator" style="display:inline">The Yeti is thinking...</span>';
+                chatMessages.appendChild(loadingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                const systemPrompt = "You are 'The Friendly Yeti', a slightly mythical, very knowledgeable guide of the Himalayas. You are warm, funny, and know everything about Everest. Keep answers concise (under 3 sentences).";
+                const response = await callGemini(text, systemPrompt);
+                document.getElementById(loadingId).remove();
+                appendMessage(response, 'bot');
+            };
+
+            sendMessage.addEventListener('click', handleChat);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleChat();
+            });
         });
     </script>
 </body>
